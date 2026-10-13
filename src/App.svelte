@@ -10,7 +10,9 @@
     import Checkout from "./lib/components/Checkout.svelte";
     import MyOrders from './lib/components/MyOrders.svelte';
     import OrderTracking from './lib/components/OrderTracking.svelte';
+    import WeightUpdate from './routes/weight-update/+page.svelte';
     import { loginCustomer } from './lib/api/authApi.js';
+
     let currentPath = window.location.pathname;
 
     let products = [];
@@ -145,6 +147,12 @@
 
     <Header />
     <OrderTracking />
+
+{:else if currentPath === '/weight-update'}
+
+    <Header />
+    <WeightUpdate />
+
 {:else}
 
     <!-- ========================= -->

@@ -73,3 +73,23 @@ export async function getOrderStatusHistory(orderId) {
         `${API_BASE_URL}/orders/${orderId}/status-history`
     );
 }
+
+export async function updateActualWeight(
+    orderId,
+    orderItemId,
+    actualQuantity
+) {
+    return requestJson(
+        `${API_BASE_URL}/orders/${orderId}/items/actual-weight`,
+        {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                orderItemId,
+                actualQuantity: Number(actualQuantity)
+            })
+        }
+    );
+}
