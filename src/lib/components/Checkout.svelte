@@ -34,8 +34,10 @@
     let orderResult = null;
     let showAddressForm = false;
     let addressSaving = false;
+    let loadError = '';
     let addressError = '';
     let addressSuccess = '';
+    let canManageAddresses = false;
 
     let addressForm = {
         addressLine1: '',
@@ -91,7 +93,7 @@
             const updatedAddresses = await getCustomerAddresses(customerId);
             addresses = updatedAddresses;
 
-            selectedAddressId = String(savedAddress.id);
+            selectedAddressId = savedAddress.id;
             showAddressForm = false;
             addressSuccess = 'Address added successfully.';
             resetAddressForm();
@@ -106,10 +108,13 @@
         const customerId = getLoggedInCustomerId();
 
         if (customerId === null) {
-            addressError = 'Please log in to view your delivery addresses.';
+            loadError = 'Please log in to view your delivery addresses.';
+            canManageAddresses = false;
             loadingAddresses = false;
             return;
         }
+
+        canManageAddresses = true;
 
         try {
             addresses = await getCustomerAddresses(customerId);
@@ -119,10 +124,12 @@
             );
 
             selectedAddressId = defaultAddress?.id ?? null;
+            showAddressForm = addresses.length === 0;
         } catch (error) {
             console.error(error);
-            addressError =
+            loadError =
                 error.message || 'Unable to load addresses. Please try again.';
+            showAddressForm = true;
         } finally {
             loadingAddresses = false;
         }
@@ -228,142 +235,147 @@
                     {#if loadingAddresses}
                         <p>Loading saved addresses...</p>
 
-                    {:else if addressError}
-                        <p class="error-message">{addressError}</p>
-
-                    {:else if addresses.length === 0}
-                        <div class="address-placeholder">
-                            <div class="address-icon">📍</div>
-                            <div>
-                                <strong>No saved addresses found</strong>
-                                <span>
-                                    Please add a delivery address before ordering.
-                                </span>
-                            </div>
-                        </div>
-
                     {:else}
-                        <div class="address-list">
-                            {#each addresses as address (address.id)}
-                                <label
-                                        class="address-option"
-                                        class:selected={selectedAddressId === address.id}
-                                >
-                                    <input
-                                            type="radio"
-                                            name="deliveryAddress"
-                                            value={address.id}
-                                            bind:group={selectedAddressId}
-                                    />
-
-                                    <span class="address-details">
-                                        <strong>
-                                            {address.addressLine1}
-                                            {#if address.addressLine2}
-                                                , {address.addressLine2}
-                                            {/if}
-                                        </strong>
-
-                                        <span>
-                                            {#if address.village}
-                                                {address.village},
-                                            {/if}
-                                            {address.city}, {address.district},
-                                            {address.state} - {address.pincode}
-                                        </span>
-
-                                        {#if address.landmark}
-                                            <span>
-                                                Landmark: {address.landmark}
-                                            </span>
-                                        {/if}
-
-                                        {#if address.defaultAddress}
-                                            <small class="default-badge">
-                                                Default address
-                                            </small>
-                                        {/if}
-                                    </span>
-                                </label>
-                            {/each}
-                        </div>
-                        <div class="add-address-actions">
-                            <button
-                                    type="button"
-                                    class="add-address-button"
-                                    onclick={() => {
-            showAddressForm = !showAddressForm;
-            addressError = '';
-            addressSuccess = '';
-        }}
-                            >
-                                {showAddressForm ? 'Cancel' : '+ Add New Address'}
-                            </button>
-                        </div>
-
-                        {#if addressSuccess}
-                            <p class="address-success" role="status">{addressSuccess}</p>
+                        {#if loadError}
+                            <p class="error-message">{loadError}</p>
                         {/if}
 
-                        {#if showAddressForm}
-                            <form
-                                    class="address-form"
-                                    onsubmit={(event) => {
-            event.preventDefault();
-            saveNewAddress();
-        }}
-                            >
-                                <label for="addressLine1">Address line 1 *</label>
-                                <input id="addressLine1" bind:value={addressForm.addressLine1}
-                                       maxlength="255" required />
+                        {#if addresses.length === 0}
+                            <div class="address-placeholder">
+                                <div class="address-icon">📍</div>
+                                <div>
+                                    <strong>No saved addresses found</strong>
+                                    <span>
+                                        Please add a delivery address before ordering.
+                                    </span>
+                                </div>
+                            </div>
+                        {:else}
+                            <div class="address-list">
+                                {#each addresses as address (address.id)}
+                                    <label
+                                            class="address-option"
+                                            class:selected={selectedAddressId === address.id}
+                                    >
+                                        <input
+                                                type="radio"
+                                                name="deliveryAddress"
+                                                value={address.id}
+                                                bind:group={selectedAddressId}
+                                        />
 
-                                <label for="addressLine2">Address line 2</label>
-                                <input id="addressLine2" bind:value={addressForm.addressLine2}
-                                       maxlength="255" />
+                                        <span class="address-details">
+                                            <strong>
+                                                {address.addressLine1}
+                                                {#if address.addressLine2}
+                                                    , {address.addressLine2}
+                                                {/if}
+                                            </strong>
 
-                                <label for="village">Village</label>
-                                <input id="village" bind:value={addressForm.village}
-                                       maxlength="100" />
+                                            <span>
+                                                {#if address.village}
+                                                    {address.village},
+                                                {/if}
+                                                {address.city}, {address.district},
+                                                {address.state} - {address.pincode}
+                                            </span>
 
-                                <label for="city">City *</label>
-                                <input id="city" bind:value={addressForm.city}
-                                       maxlength="100" required />
+                                            {#if address.landmark}
+                                                <span>
+                                                    Landmark: {address.landmark}
+                                                </span>
+                                            {/if}
 
-                                <label for="district">District *</label>
-                                <input id="district" bind:value={addressForm.district}
-                                       maxlength="100" required />
+                                            {#if address.defaultAddress}
+                                                <small class="default-badge">
+                                                    Default address
+                                                </small>
+                                            {/if}
+                                        </span>
+                                    </label>
+                                {/each}
+                            </div>
+                        {/if}
 
-                                <label for="state">State</label>
-                                <input id="state" bind:value={addressForm.state}
-                                       maxlength="100" />
-                                <label for="pincode">PIN code *</label>
-                                <input
-                                        id="pincode"
-                                        type="text"
-                                        bind:value={addressForm.pincode}
-                                        inputmode="numeric"
-                                        maxlength="6"
-                                        minlength="6"
-                                        required
-                                />
-
-                                <label for="landmark">Landmark</label>
-                                <input id="landmark" bind:value={addressForm.landmark}
-                                       maxlength="255" />
-
-                                <label class="default-address-option">
-                                    <input type="checkbox" bind:checked={addressForm.defaultAddress} />
-                                    Set as default address
-                                </label>
-
-                                {#if addressError}
-                                    <p class="address-error" role="alert">{addressError}</p>
-                                {/if}
-
-                                <button type="submit" disabled={addressSaving}>
-                                    {addressSaving ? 'Saving...' : 'Save Address'}
+                        {#if canManageAddresses}
+                            <div class="add-address-actions">
+                                <button
+                                        type="button"
+                                        class="add-address-button"
+                                        onclick={() => {
+                                            showAddressForm = !showAddressForm;
+                                            addressError = '';
+                                            addressSuccess = '';
+                                        }}
+                                >
+                                    {showAddressForm ? 'Cancel' : '+ Add New Address'}
                                 </button>
-                            </form>
+                            </div>
+
+                            {#if addressSuccess}
+                                <p class="address-success" role="status">{addressSuccess}</p>
+                            {/if}
+
+                            {#if showAddressForm}
+                                <form
+                                        class="address-form"
+                                        onsubmit={(event) => {
+                                            event.preventDefault();
+                                            saveNewAddress();
+                                        }}
+                                >
+                                    <label for="addressLine1">Address line 1 *</label>
+                                    <input id="addressLine1" bind:value={addressForm.addressLine1}
+                                           maxlength="255" required />
+
+                                    <label for="addressLine2">Address line 2</label>
+                                    <input id="addressLine2" bind:value={addressForm.addressLine2}
+                                           maxlength="255" />
+
+                                    <label for="village">Village</label>
+                                    <input id="village" bind:value={addressForm.village}
+                                           maxlength="100" />
+
+                                    <label for="city">City *</label>
+                                    <input id="city" bind:value={addressForm.city}
+                                           maxlength="100" required />
+
+                                    <label for="district">District *</label>
+                                    <input id="district" bind:value={addressForm.district}
+                                           maxlength="100" required />
+
+                                    <label for="state">State</label>
+                                    <input id="state" bind:value={addressForm.state}
+                                           maxlength="100" />
+                                    <label for="pincode">PIN code *</label>
+                                    <input
+                                            id="pincode"
+                                            type="text"
+                                            bind:value={addressForm.pincode}
+                                            inputmode="numeric"
+                                            maxlength="6"
+                                            minlength="6"
+                                            required
+                                    />
+
+                                    <label for="landmark">Landmark</label>
+                                    <input id="landmark" bind:value={addressForm.landmark}
+                                           maxlength="255" />
+
+                                    <label class="default-address-option">
+                                        <input type="checkbox" bind:checked={addressForm.defaultAddress} />
+                                        Set as default address
+                                    </label>
+
+                                    {#if addressError}
+                                        <p class="address-error" role="alert">{addressError}</p>
+                                    {/if}
+
+                                    <button type="submit" disabled={addressSaving}>
+                                        {addressSaving ? 'Saving...' : 'Save Address'}
+                                    </button>
+                                </form>
+                            {/if}
                         {/if}
                     {/if}
                 </div>

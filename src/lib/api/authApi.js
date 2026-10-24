@@ -2,13 +2,19 @@
 const API_BASE_URL = 'http://localhost:8080/api';
 
 async function requestJson(endpoint, options = {}) {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-        ...options,
-        headers: {
-            'Content-Type': 'application/json',
-            ...options.headers
-        }
-    });
+    let response;
+
+    try {
+        response = await fetch(`${API_BASE_URL}${endpoint}`, {
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    } catch {
+        throw new Error('Unable to reach the server. Please try again.');
+    }
 
     if (!response.ok) {
         let message = `Request failed (${response.status})`;

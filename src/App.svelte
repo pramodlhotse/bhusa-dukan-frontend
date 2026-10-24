@@ -10,8 +10,9 @@
     import Checkout from "./lib/components/Checkout.svelte";
     import MyOrders from './lib/components/MyOrders.svelte';
     import OrderTracking from './lib/components/OrderTracking.svelte';
-    import { loginCustomer } from './lib/api/authApi.js';
+    import { loginCustomer, registerCustomer } from './lib/api/authApi.js';
     let currentPath = window.location.pathname;
+    let searchParams = new URLSearchParams(window.location.search);
 
     let products = [];
     let loading = true;
@@ -21,6 +22,14 @@
     let loginPassword = '';
     let loginError = '';
     let loginLoading = false;
+    let registeredSuccess = searchParams.get('registered') === '1';
+    let registerName = '';
+    let registerMobile = '';
+    let registerEmail = '';
+    let registerPassword = '';
+    let registerConfirmPassword = '';
+    let registerError = '';
+    let registerLoading = false;
     async function handleLogin(event) {
         event.preventDefault();
 
@@ -38,6 +47,44 @@
             loginError = error.message || 'Unable to log in. Please try again.';
         } finally {
             loginLoading = false;
+        }
+    }
+
+    async function handleRegister(event) {
+        event.preventDefault();
+
+        registerError = '';
+        registerLoading = true;
+
+        const name = registerName.trim();
+        const mobile = registerMobile.trim();
+        const email = registerEmail.trim();
+
+        try {
+            if (!/^[0-9]{10,15}$/.test(mobile)) {
+                throw new Error('Mobile number must contain 10 to 15 digits');
+            }
+
+            if (registerPassword.length < 8 || registerPassword.length > 72) {
+                throw new Error('Password must contain 8 to 72 characters');
+            }
+
+            if (registerPassword !== registerConfirmPassword) {
+                throw new Error('Passwords do not match');
+            }
+
+            await registerCustomer({
+                name,
+                mobile,
+                email,
+                password: registerPassword
+            });
+
+            window.location.href = '/login?registered=1';
+        } catch (error) {
+            registerError = error.message || 'Unable to register. Please try again.';
+        } finally {
+            registerLoading = false;
         }
     }
 
@@ -105,6 +152,12 @@
                         required
                 />
 
+                {#if registeredSuccess}
+                    <p class="auth-success" role="status">
+                        Account created. Please log in to continue.
+                    </p>
+                {/if}
+
                 {#if loginError}
                     <p class="auth-error" role="alert">{loginError}</p>
                 {/if}
@@ -115,8 +168,95 @@
             </form>
 
             <p class="auth-note">
-                New customer? Registration is available through the backend API;
-                we'll add the registration screen next.
+                New customer? <a href="/register">Create an account</a>
+            </p>
+
+            <a class="auth-home" href="/">Back to home</a>
+        </section>
+    </main>
+
+
+
+{:else if currentPath === '/register'}
+
+    <Header />
+
+    <main class="auth-page">
+        <section class="auth-card">
+            <div class="auth-icon">🌾</div>
+
+            <h1>Create Account</h1>
+            <p>Register to order bhusa and track deliveries.</p>
+
+            <form on:submit|preventDefault={handleRegister}>
+                <label for="registerName">Full name</label>
+                <input
+                        id="registerName"
+                        type="text"
+                        bind:value={registerName}
+                        placeholder="Enter your full name"
+                        autocomplete="name"
+                        maxlength="100"
+                        required
+                />
+
+                <label for="registerMobile">Mobile number</label>
+                <input
+                        id="registerMobile"
+                        type="tel"
+                        bind:value={registerMobile}
+                        placeholder="10 to 15 digit mobile number"
+                        autocomplete="tel"
+                        inputmode="numeric"
+                        required
+                />
+
+                <label for="registerEmail">Email</label>
+                <input
+                        id="registerEmail"
+                        type="email"
+                        bind:value={registerEmail}
+                        placeholder="Enter your email address"
+                        autocomplete="email"
+                        maxlength="150"
+                        required
+                />
+
+                <label for="registerPassword">Password</label>
+                <input
+                        id="registerPassword"
+                        type="password"
+                        bind:value={registerPassword}
+                        placeholder="At least 8 characters"
+                        autocomplete="new-password"
+                        minlength="8"
+                        maxlength="72"
+                        required
+                />
+
+                <label for="registerConfirmPassword">Confirm password</label>
+                <input
+                        id="registerConfirmPassword"
+                        type="password"
+                        bind:value={registerConfirmPassword}
+                        placeholder="Re-enter your password"
+                        autocomplete="new-password"
+                        minlength="8"
+                        maxlength="72"
+                        required
+                />
+
+                {#if registerError}
+                    <p class="auth-error" role="alert">{registerError}</p>
+                {/if}
+
+                <button type="submit" disabled={registerLoading}>
+                    {registerLoading ? 'Creating account...' : 'Register'}
+                </button>
+            </form>
+
+            <p class="auth-note">
+                Already have an account? <a href="/login">Log in</a>
             </p>
 
             <a class="auth-home" href="/">Back to home</a>

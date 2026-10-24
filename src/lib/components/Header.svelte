@@ -31,9 +31,10 @@
             {/if}
         </a>
 
-        <button class="profile-button" title="Profile">
+        <a class="auth-nav" href="/register">Register</a>
+        <a class="profile-button" href="/login" title="Login">
             👤
-        </button>
+        </a>
 
     </div>
 
@@ -131,6 +132,33 @@
     .profile-button:hover {
         background: #f2f8ed;
         border-color: #b9d6af;
+    }
+
+    .profile-button {
+        width: 42px;
+        height: 42px;
+        border: 1px solid #dfe5dc;
+        border-radius: 12px;
+        background: #ffffff;
+        font-size: 19px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.2s ease;
+    }
+
+    .auth-nav {
+        text-decoration: none;
+        color: #28683d;
+        font-size: 14px;
+        font-weight: 700;
+        padding: 8px 10px;
+    }
+
+    .auth-nav:hover {
+        text-decoration: underline;
     }
 
     .cart-count {

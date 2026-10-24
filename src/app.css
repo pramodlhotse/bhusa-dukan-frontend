@@ -94,6 +94,23 @@
     font-size: 14px;
 }
 
+.auth-card .auth-success {
+    margin: 4px 0 0;
+    color: #28683d;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.auth-note a {
+    color: #28683d;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.auth-note a:hover {
+    text-decoration: underline;
+}
+
 .auth-card .auth-note {
     margin-top: 20px;
     font-size: 14px;
